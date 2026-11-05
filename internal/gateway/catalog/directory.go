@@ -72,6 +72,7 @@ var loadDirectory = sync.OnceValues(func() (directoryAsset, error) {
 	// The upstream lists omit providers this gateway can route to, so they
 	// are merged in and the whole list ordered here, where it is done once.
 	asset.Providers = sortDirectory(withProwlDirectoryProviders(asset.Providers))
+	asset.Sources["omniroute"] = "https://github.com/cheaper-inference/OmniRoute"
 	if len(asset.Providers) == 0 {
 		return directoryAsset{}, fmt.Errorf("provider directory is empty")
 	}

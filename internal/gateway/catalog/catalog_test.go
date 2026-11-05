@@ -39,6 +39,37 @@ func TestEndpointsAreUniqueAndValid(t *testing.T) {
 	}
 }
 
+func TestOmniRouteEndpointsAreDiscoverable(t *testing.T) {
+	providers, err := All()
+	require.NoError(t, err)
+	directory, err := Directory()
+	require.NoError(t, err)
+	byID := map[string]DirectoryEntry{}
+	for _, entry := range directory {
+		byID[entry.ID] = entry
+	}
+	count := 0
+	for _, p := range providers {
+		if p.Source != "omniroute" {
+			continue
+		}
+		count++
+		require.True(t, p.Routable(), p.ID)
+		require.False(t, p.Free(), "no unverified free-tier claims")
+		require.Empty(t, p.Models, "do not automatically enroll upstream model rosters")
+		require.NotContains(t, p.BaseURL, "/chat/completions", "store the root, not the full verb")
+		entry, ok := byID[p.ID]
+		require.True(t, ok, p.ID)
+		require.True(t, entry.Routable, p.ID)
+		require.Contains(t, entry.Sources, "omniroute")
+		require.NotEmpty(t, entry.DocsURL+entry.APIKeyURL)
+	}
+	require.Equal(t, 18, count)
+	for _, id := range []string{"beatapi", "parallel"} {
+		require.False(t, byID[id].Routable, id)
+	}
+}
+
 // TestRoutabilityIsHonest checks the classification the dashboard relies on:
 // an endpoint that does not speak OpenAI chat completions, or that still has
 // an unfilled placeholder, must not be offered as one-click.

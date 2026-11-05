@@ -27,7 +27,7 @@ func TestDirectoryListsProwlProviders(t *testing.T) {
 		require.NotEmpty(t, got.Name, "%s must be presentable", extra.ID)
 		require.NotEmpty(t, got.Class, "%s must declare a class so it sorts", extra.ID)
 		require.NotEmpty(t, got.Friction, "%s must say what signing up costs", extra.ID)
-		require.Equal(t, extra.ID != "sail", got.Routable, "%s routability is dishonest", extra.ID)
+		require.Equal(t, extra.ID != "sail" && extra.ID != "beatapi" && extra.ID != "parallel", got.Routable, "%s routability is dishonest", extra.ID)
 		if !got.Routable {
 			require.NotEmpty(t, got.Note, "%s must explain why it is listed only", extra.ID)
 		}

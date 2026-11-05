@@ -19,6 +19,8 @@ import (
 	"time"
 
 	"github.com/neur0map/prowl/internal/gateway"
+	"github.com/neur0map/prowl/internal/gateway/catalog"
+	"github.com/neur0map/prowl/internal/gateway/provider"
 )
 
 // registerKeysCustomRoutes mounts the custom-endpoint, discovery and import
@@ -1769,6 +1771,9 @@ type keysCustomKeyPair struct {
 
 // keysCustomPrefixMap maps a *_ env prefix to a platform (key-parser.ts:40-116).
 var keysCustomPrefixMap = map[string]string{
+	"BEATAPI_": "beatapi", "BLAZE_": "blaze", "BLAZEAPI_": "blaze", "BLOCKRUN_": "blockrun",
+	"DREAMPROMPTING_": "dreamprompting", "DREAM_PROMPTING_": "dreamprompting",
+	"INFERBASE_": "inferbase", "LOGFARE_": "logfare", "PARALLEL_": "parallel", "WATERFALL_": "waterfall",
 	"GOOGLE_": "google", "GEMINI_": "google", "GROQ_": "groq", "CEREBRAS_": "cerebras",
 	"SAIL_": "sail", "SAILRESEARCH_": "sail", "SAIL_RESEARCH_": "sail",
 	"ELECTRONHUB_": "electronhub", "ELECTRON_HUB_": "electronhub",
@@ -1800,6 +1805,9 @@ var keysCustomPrefixMap = map[string]string{
 // keysCustomAuthJSONMap maps an opencode auth.json provider name to a platform
 // (key-parser.ts:118-181).
 var keysCustomAuthJSONMap = map[string]string{
+	"beatapi": "beatapi", "blaze": "blaze", "blazeapi": "blaze", "blockrun": "blockrun",
+	"dreamprompting": "dreamprompting", "dream-prompting": "dreamprompting",
+	"inferbase": "inferbase", "logfare": "logfare", "parallel": "parallel", "waterfall": "waterfall",
 	"gemini": "google", "google": "google", "groq": "groq", "sail": "sail",
 	"sail-research": "sail", "sailresearch": "sail", "electronhub": "electronhub",
 	"electron-hub": "electronhub", "experiential": "experiential",
@@ -1845,6 +1853,20 @@ func keysCustomSplitRawKey(rawKey string) (name, value string) {
 func keysCustomDetectPlatform(prefix string) *string {
 	if p, ok := keysCustomPrefixMap[prefix]; ok {
 		return &p
+	}
+	// Catalog additions should not need another handwritten importer mapping.
+	entries, _ := catalog.All()
+	for _, entry := range entries {
+		if entry.Env == "" || strings.TrimSuffix(entry.Env, "API_KEY") != prefix {
+			continue
+		}
+		platform, ok := catalog.AdapterPlatform(entry.ID)
+		if !ok {
+			platform = entry.ID
+		}
+		if provider.Known(platform) {
+			return &platform
+		}
 	}
 	return nil
 }
@@ -2092,9 +2114,9 @@ func keysCustomParseAuthJSON(content string) keysCustomParseResult {
 	if json.Unmarshal([]byte(content), &obj) != nil || obj.CredentialPool == nil {
 		return res
 	}
-	for provider, creds := range obj.CredentialPool {
+	for providerID, creds := range obj.CredentialPool {
 		for _, row := range creds {
-			label := provider
+			label := providerID
 			if l, ok := row["label"].(string); ok && l != "" {
 				label = l
 			} else if id, ok := row["id"].(string); ok && id != "" {
@@ -2102,18 +2124,21 @@ func keysCustomParseAuthJSON(content string) keysCustomParseResult {
 			}
 			if at, ok := row["auth_type"]; ok {
 				if ats, _ := at.(string); ats != "api_key" {
-					res.skipped = append(res.skipped, fmt.Sprintf("%s/%s: auth_type is %v", provider, label, at))
+					res.skipped = append(res.skipped, fmt.Sprintf("%s/%s: auth_type is %v", providerID, label, at))
 					continue
 				}
 			}
 			token, _ := row["access_token"].(string)
 			if strings.TrimSpace(token) == "" {
-				res.skipped = append(res.skipped, fmt.Sprintf("%s/%s: no access_token", provider, label))
+				res.skipped = append(res.skipped, fmt.Sprintf("%s/%s: no access_token", providerID, label))
 				continue
 			}
-			platform, ok := keysCustomAuthJSONMap[provider]
+			platform, ok := keysCustomAuthJSONMap[providerID]
+			if !ok && providerID != "custom" && provider.Known(providerID) {
+				platform, ok = providerID, true
+			}
 			if !ok {
-				res.skipped = append(res.skipped, fmt.Sprintf("%s/%s: no platform mapping", provider, label))
+				res.skipped = append(res.skipped, fmt.Sprintf("%s/%s: no platform mapping", providerID, label))
 				continue
 			}
 			p := platform

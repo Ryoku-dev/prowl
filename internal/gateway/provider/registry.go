@@ -280,7 +280,11 @@ func (c *compat) StreamChatCompletion(ctx context.Context, apiKey string, req *C
 		cancel()
 		return nil, httpErrorFrom(resp.StatusCode, resp.Header, b)
 	}
-	return newSSEStream(resp, cancel, c.cfg.verifyModelIdentity, req.Model), nil
+	stream := newSSEStream(resp, cancel, c.cfg.verifyModelIdentity, req.Model)
+	if c.cfg.verifyModelIdentity {
+		stream.checkResponse = c.cfg.checkResponse
+	}
+	return stream, nil
 }
 
 // doStream issues the streaming POST with a first-byte watchdog: the per-
@@ -596,14 +600,15 @@ func jsonString(s string) json.RawMessage {
 // ── Streaming implementations ────────────────────────────────────────────────
 
 type sseStream struct {
-	resp        *http.Response
-	scan        *bufio.Scanner
-	cancel      context.CancelFunc
-	verifyModel bool
-	reqModel    string
-	sawFinish   bool
-	sawModel    bool
-	closed      bool
+	resp          *http.Response
+	scan          *bufio.Scanner
+	cancel        context.CancelFunc
+	verifyModel   bool
+	checkResponse func(string, *ChatResponse) error
+	reqModel      string
+	sawFinish     bool
+	sawModel      bool
+	closed        bool
 }
 
 func newSSEStream(resp *http.Response, cancel context.CancelFunc, verify bool, reqModel string) *sseStream {
@@ -640,7 +645,19 @@ func (s *sseStream) Recv() (*ChatChunk, error) {
 		}
 		var chunk ChatChunk
 		if err := json.Unmarshal([]byte(data), &chunk); err != nil {
+			if s.checkResponse != nil {
+				return nil, &HTTPError{Status: 502, Message: "provider returned a malformed stream event"}
+			}
 			continue
+		}
+		if s.checkResponse != nil && chunk.Choices == nil {
+			return nil, &HTTPError{Status: 502, Message: "provider returned an upstream stream error or malformed event"}
+		}
+		if s.checkResponse != nil && (chunk.Model != "" || len(chunk.Choices) > 0 || !s.sawModel) {
+			if err := s.checkResponse(s.reqModel, &ChatResponse{Model: chunk.Model}); err != nil {
+				return nil, err
+			}
+			s.sawModel = true
 		}
 		chunk.Raw = append([]byte(nil), data...)
 		for _, ch := range chunk.Choices {
@@ -894,6 +911,7 @@ func Known(platform string) bool {
 // URLs, timeouts, headers, keyless flags and validate overrides are all taken
 // from that file (cited inline where the value would be hard to re-derive).
 func registerAll(r *Registry) {
+	registerFreeLLMAPIEndpoints(r)
 	plain := func(platform, name, baseURL string) {
 		r.register(providerCfg{platform: platform, name: name, baseURL: baseURL})
 	}

@@ -2,8 +2,8 @@
 
 `providers.json` starts from generated upstream data, then receives a reviewed
 compatibility pass for endpoint, authentication, and retirement changes. The
-upstream merge combines two MIT-licensed sources and deduplicates them by API
-endpoint.
+upstream merge combines free-API and LiteLLM data, then adds reviewed OmniRoute
+registrations. Entries are deduplicated by API endpoint.
 
 ## Sources
 
@@ -11,8 +11,9 @@ endpoint.
 |---|---|---|
 | [open-free-llm-api/awesome-freellm-apis](https://github.com/open-free-llm-api/awesome-freellm-apis) | Free-tier providers: base URLs, API-key signup links, card/verification requirements, max context, modalities, and the curated best-free-model lists | MIT |
 | [BerriAI/litellm](https://github.com/BerriAI/litellm) | Additional provider endpoints and their conventional API-key environment variable names | MIT |
+| [cheaper-inference/OmniRoute](https://github.com/cheaper-inference/OmniRoute) | 18 reviewed static bearer-key OpenAI-compatible chat endpoints; see `docs/PROVIDER-ENDPOINTS.md` for the source snapshot and scope | MIT |
 
-Both upstreams are MIT licensed. Their copyright notices are reproduced in
+These upstreams are MIT licensed. Their copyright notices are reproduced in
 `NOTICE.md` at the repository root.
 
 ## What the generation does
@@ -50,9 +51,9 @@ probe and the documented `codestral-2508` model is registered.
 
 ## Current contents
 
-- 45 providers, one per unique endpoint
+- 63 providers, one per unique endpoint
 - 26 with a standing free tier and at least one currently advertised free model
-- 32 routable as OpenAI-compatible endpoints today
+- 50 classified as OpenAI-compatible endpoints (18 additional OmniRoute entries are upstream-reviewed, not live credential-tested here)
 - 13 listed but not generically routable: Cloudflare Workers AI, Google Gemini,
   GitHub Models, Cohere, AI21 Labs, Glhf.chat, Anyscale, Empower, Galadriel,
   GigaChat, GitHub Models (legacy), Manus, and Soniox

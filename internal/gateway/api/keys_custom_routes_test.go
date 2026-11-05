@@ -2,6 +2,7 @@ package api
 
 import (
 	"bytes"
+	"context"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -292,6 +293,47 @@ func TestProbeAllNonChatCatalogMakesNoChatRequest(t *testing.T) {
 	require.Equal(t, string(TypeUpstream), errorType(t, body))
 	require.Contains(t, body, "no chat model",
 		"the operator must be told the endpoint serves no chat model")
+}
+
+func TestImportSelectedFreeLLMAPIPlatforms(t *testing.T) {
+	t.Parallel()
+	s := testServer(t, Options{})
+	token := session(t, s)
+	platforms := []string{"beatapi", "blaze", "blockrun", "dreamprompting", "inferbase", "logfare", "parallel", "waterfall"}
+	keys := make([]map[string]string, 0, len(platforms))
+	for _, platform := range platforms {
+		keys = append(keys, map[string]string{"platform": platform, "keyName": platform, "keyValue": "test-secret-" + platform})
+	}
+	payload, err := json.Marshal(map[string]any{"keys": keys})
+	require.NoError(t, err)
+	resp, body := do(t, s, http.MethodPost, "/api/keys/import-selected", string(payload), authed(token))
+	require.Equal(t, http.StatusOK, resp.StatusCode, body)
+	out := decodeMap(t, body)
+	require.EqualValues(t, len(platforms), out["imported"])
+	require.Empty(t, out["errors"].([]any))
+	rows, err := s.engine.Vault().List(context.Background())
+	require.NoError(t, err)
+	require.Len(t, rows, len(platforms))
+	for _, platform := range platforms {
+		require.NotContains(t, body, "test-secret-"+platform)
+	}
+}
+
+func TestImportDetectsAddedProviders(t *testing.T) {
+	for prefix, platform := range map[string]string{
+		"BEATAPI_": "beatapi", "BLAZEAPI_": "blaze", "BLOCKRUN_": "blockrun",
+		"DREAM_PROMPTING_": "dreamprompting", "INFERBASE_": "inferbase",
+		"LOGFARE_": "logfare", "PARALLEL_": "parallel", "WATERFALL_": "waterfall",
+		"FEATHERLESS_": "featherless-ai", "INFERENCE_NET_": "inference-net", "DEEPINFRA_": "deepinfra",
+	} {
+		got := keysCustomDetectPlatform(prefix)
+		require.NotNil(t, got, prefix)
+		require.Equal(t, platform, *got)
+	}
+	require.Nil(t, keysCustomDetectPlatform("NOT_A_PROVIDER_"))
+	parsed := keysCustomParseAuthJSON(`{"credential_pool":{"deepinfra":[{"auth_type":"api_key","access_token":"test-only"}]}}`)
+	require.Len(t, parsed.keys, 1)
+	require.Equal(t, "deepinfra", *parsed.keys[0].platform)
 }
 
 // TestImportSelectedCreatesModelsIdempotently: importing a custom endpoint with

@@ -17,6 +17,14 @@ package catalog
 // prowlDirectoryProviders contains entries the upstream source lists omit.
 // Most have a Prowl adapter; listed-only exceptions say so explicitly.
 var prowlDirectoryProviders = []DirectoryEntry{
+	{ID: "beatapi", Name: "BeatAPI", Class: ClassPaid, Friction: "registration", Note: "Credential management only: decisions API, not chat completions."},
+	{ID: "blaze", Name: "BlazeAPI", Class: ClassPaid, Friction: "registration", Note: "Uses /paid/v1 for all plans; model pricing is not inferred."},
+	{ID: "blockrun", Name: "BlockRun", Class: ClassPaid, Friction: "registration", Note: "API-key endpoint, not wallet/x402; select model pricing explicitly."},
+	{ID: "dreamprompting", Name: "DreamPrompting", Class: ClassPaid, Friction: "registration", Note: "Aliased model identities are checked; streaming is buffered."},
+	{ID: "inferbase", Name: "Inferbase", Class: ClassPaid, Friction: "registration", Note: "Authenticated credits probe; streaming is buffered to avoid provider-only receipt frames."},
+	{ID: "logfare", Name: "Logfare", Class: ClassPaid, Friction: "registration"},
+	{ID: "parallel", Name: "Parallel", Class: ClassPaid, Friction: "registration", Note: "Credential management only: keyed REST search, not chat or anonymous MCP."},
+	{ID: "waterfall", Name: "Waterfall", Class: ClassPaid, Friction: "registration"},
 	{
 		ID: "sail", Name: "Sail Research", Class: ClassCredits,
 		Friction: "card", APIKeyURL: "https://app.sailresearch.com",
@@ -146,10 +154,43 @@ func withProwlDirectoryProviders(entries []DirectoryEntry) []DirectoryEntry {
 		if _, ok := seen[extra.ID]; ok {
 			continue
 		}
-		extra.Routable = extra.ID != "sail"
+		extra.Routable = extra.ID != "sail" && extra.ID != "beatapi" && extra.ID != "parallel"
 		extra.Probe = ProbeNone
 		extra.Sources = []string{"prowl"}
+		switch extra.ID {
+		case "beatapi", "blaze", "blockrun", "dreamprompting", "inferbase", "logfare", "parallel", "waterfall":
+			extra.DocsURL = "https://github.com/tashfeenahmed/freellmapi/blob/22b7ec74a09892d3efdb9107ec3e74c764dd71a1/server/src/providers/" + extra.ID + ".ts"
+			extra.Sources = []string{"freellmapi", "prowl"}
+		}
 		merged = append(merged, extra)
+	}
+	// Reviewed catalog additions also belong in discovery, without duplicating
+	// endpoint metadata or leaving an existing listed-only row unroutable.
+	providers, _ := All()
+	for _, p := range providers {
+		if p.Source != "omniroute" {
+			continue
+		}
+		found := false
+		for i := range merged {
+			if merged[i].ID != p.ID {
+				continue
+			}
+			merged[i].Routable = p.Routable()
+			merged[i].Env = p.Env
+			if merged[i].DocsURL == "" {
+				merged[i].DocsURL = "https://github.com/cheaper-inference/OmniRoute/tree/e0552a26f4f049220131412a70fe272163c31215/open-sse/config/providers/registry/" + p.ID
+			}
+			merged[i].Sources = append(append([]string(nil), merged[i].Sources...), p.Source)
+			found = true
+			break
+		}
+		if !found {
+			merged = append(merged, DirectoryEntry{ID: p.ID, Name: p.Name, Class: ClassPaid,
+				Friction: p.Friction, Env: p.Env, Routable: p.Routable(), Probe: ProbeNone,
+				DocsURL: "https://github.com/cheaper-inference/OmniRoute/tree/e0552a26f4f049220131412a70fe272163c31215/open-sse/config/providers/registry/" + p.ID,
+				Sources: []string{p.Source}, Note: "OpenAI-compatible API-key endpoint; no free models or prices are assumed."})
+		}
 	}
 	return merged
 }

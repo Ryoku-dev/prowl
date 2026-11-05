@@ -1410,5 +1410,203 @@
   "compat": "openai",
   "requires_vars": [],
   "friction": "registration"
+ },
+ {
+  "id": "synthetic",
+  "name": "Synthetic",
+  "base_url": "https://api.synthetic.new/openai/v1",
+  "env": "SYNTHETIC_API_KEY",
+  "tier": "paid-or-credits",
+  "source": "omniroute",
+  "compat": "openai",
+  "requires_vars": [],
+  "friction": "registration"
+ },
+ {
+  "id": "deepinfra",
+  "name": "DeepInfra",
+  "base_url": "https://api.deepinfra.com/v1/openai",
+  "env": "DEEPINFRA_API_KEY",
+  "tier": "paid-or-credits",
+  "source": "omniroute",
+  "compat": "openai",
+  "requires_vars": [],
+  "friction": "registration"
+ },
+ {
+  "id": "fireworks",
+  "name": "Fireworks AI",
+  "base_url": "https://api.fireworks.ai/inference/v1",
+  "env": "FIREWORKS_API_KEY",
+  "tier": "paid-or-credits",
+  "source": "omniroute",
+  "compat": "openai",
+  "requires_vars": [],
+  "friction": "registration"
+ },
+ {
+  "id": "featherless-ai",
+  "name": "Featherless AI",
+  "base_url": "https://api.featherless.ai/v1",
+  "env": "FEATHERLESS_API_KEY",
+  "tier": "paid-or-credits",
+  "source": "omniroute",
+  "compat": "openai",
+  "requires_vars": [],
+  "friction": "registration"
+ },
+ {
+  "id": "hyperbolic",
+  "name": "Hyperbolic",
+  "base_url": "https://api.hyperbolic.xyz/v1",
+  "env": "HYPERBOLIC_API_KEY",
+  "tier": "paid-or-credits",
+  "source": "omniroute",
+  "compat": "openai",
+  "requires_vars": [],
+  "friction": "registration"
+ },
+ {
+  "id": "lambda-ai",
+  "name": "Lambda AI",
+  "base_url": "https://api.lambda.ai/v1",
+  "env": "LAMBDA_API_KEY",
+  "tier": "paid-or-credits",
+  "source": "omniroute",
+  "compat": "openai",
+  "requires_vars": [],
+  "friction": "registration"
+ },
+ {
+  "id": "moonshot",
+  "name": "Moonshot AI",
+  "base_url": "https://api.moonshot.ai/v1",
+  "env": "MOONSHOT_API_KEY",
+  "tier": "paid-or-credits",
+  "source": "omniroute",
+  "compat": "openai",
+  "requires_vars": [],
+  "friction": "registration"
+ },
+ {
+  "id": "minimax",
+  "name": "MiniMax",
+  "base_url": "https://api.minimax.io/v1",
+  "env": "MINIMAX_API_KEY",
+  "tier": "paid-or-credits",
+  "source": "omniroute",
+  "compat": "openai",
+  "requires_vars": [],
+  "friction": "registration"
+ },
+ {
+  "id": "poe",
+  "name": "Poe API",
+  "base_url": "https://api.poe.com/v1",
+  "env": "POE_API_KEY",
+  "tier": "paid-or-credits",
+  "source": "omniroute",
+  "compat": "openai",
+  "requires_vars": [],
+  "friction": "registration"
+ },
+ {
+  "id": "inception",
+  "name": "Inception Labs",
+  "base_url": "https://api.inceptionlabs.ai/v1",
+  "env": "INCEPTION_API_KEY",
+  "tier": "paid-or-credits",
+  "source": "omniroute",
+  "compat": "openai",
+  "requires_vars": [],
+  "friction": "registration"
+ },
+ {
+  "id": "morph",
+  "name": "Morph",
+  "base_url": "https://api.morphllm.com/v1",
+  "env": "MORPH_API_KEY",
+  "tier": "paid-or-credits",
+  "source": "omniroute",
+  "compat": "openai",
+  "requires_vars": [],
+  "friction": "registration"
+ },
+ {
+  "id": "upstage",
+  "name": "Upstage",
+  "base_url": "https://api.upstage.ai/v1",
+  "env": "UPSTAGE_API_KEY",
+  "tier": "paid-or-credits",
+  "source": "omniroute",
+  "compat": "openai",
+  "requires_vars": [],
+  "friction": "registration"
+ },
+ {
+  "id": "inference-net",
+  "name": "Inference.net",
+  "base_url": "https://api.inference.net/v1",
+  "env": "INFERENCE_NET_API_KEY",
+  "tier": "paid-or-credits",
+  "source": "omniroute",
+  "compat": "openai",
+  "requires_vars": [],
+  "friction": "registration"
+ },
+ {
+  "id": "arcee-ai",
+  "name": "Arcee AI",
+  "base_url": "https://api.arcee.ai/api/v1",
+  "env": "ARCEE_API_KEY",
+  "tier": "paid-or-credits",
+  "source": "omniroute",
+  "compat": "openai",
+  "requires_vars": [],
+  "friction": "registration"
+ },
+ {
+  "id": "aimlapi",
+  "name": "AI/ML API",
+  "base_url": "https://api.aimlapi.com/v1",
+  "env": "AIMLAPI_API_KEY",
+  "tier": "paid-or-credits",
+  "source": "omniroute",
+  "compat": "openai",
+  "requires_vars": [],
+  "friction": "registration"
+ },
+ {
+  "id": "nanogpt",
+  "name": "NanoGPT",
+  "base_url": "https://nano-gpt.com/api/v1",
+  "env": "NANOGPT_API_KEY",
+  "tier": "paid-or-credits",
+  "source": "omniroute",
+  "compat": "openai",
+  "requires_vars": [],
+  "friction": "registration"
+ },
+ {
+  "id": "llmgateway",
+  "name": "LLM Gateway",
+  "base_url": "https://api.llmgateway.io/v1",
+  "env": "LLMGATEWAY_API_KEY",
+  "tier": "paid-or-credits",
+  "source": "omniroute",
+  "compat": "openai",
+  "requires_vars": [],
+  "friction": "registration"
+ },
+ {
+  "id": "publicai",
+  "name": "PublicAI",
+  "base_url": "https://api.publicai.co/v1",
+  "env": "PUBLICAI_API_KEY",
+  "tier": "paid-or-credits",
+  "source": "omniroute",
+  "compat": "openai",
+  "requires_vars": [],
+  "friction": "registration"
  }
 ]
