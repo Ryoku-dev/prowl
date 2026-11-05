@@ -7,6 +7,9 @@ All notable changes are recorded here. The format follows
 ## [Unreleased]
 
 ### Added
+- The gateway now recognizes eight FreeLLMAPI provider IDs and 18 reviewed
+  OmniRoute OpenAI-compatible endpoints, including their key-import variables,
+  provider directory entries, and guarded model identities.
 - The gateway answers code-intelligence questions for every registered
   project at `GET /api/code/{repos,status,overview,find,def,outline,references,
   impact,search,peek,history,doctor}`, picking the project with `?repo=` (an

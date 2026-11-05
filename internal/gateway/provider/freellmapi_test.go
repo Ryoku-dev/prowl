@@ -119,8 +119,15 @@ func TestFreeLLMAPIValidation(t *testing.T) {
 				}
 				if tc.platform == "parallel" {
 					body, _ := io.ReadAll(req.Body)
-					if req.Method != "POST" || string(body) != "{}" || req.Header.Get("x-api-key") != "test" || req.Header.Get("Authorization") != "" {
+					if req.Method != "POST" || string(body) != "{}" || req.Header.Get("Authorization") != "" {
 						t.Errorf("invalid Parallel search probe")
+					}
+					if req.Header.Get("x-api-key") == sentinelInvalidKey {
+						w.WriteHeader(http.StatusUnauthorized)
+						return
+					}
+					if req.Header.Get("x-api-key") != "test" {
+						t.Errorf("missing Parallel key")
 					}
 				} else {
 					if req.Header.Get("Authorization") == "Bearer "+sentinelInvalidKey {
@@ -142,5 +149,19 @@ func TestFreeLLMAPIValidation(t *testing.T) {
 				t.Fatalf("validation = %+v, want %v", got, tc.want)
 			}
 		})
+	}
+}
+
+func TestParallelValidationRejectsPublic422(t *testing.T) {
+	up := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		w.WriteHeader(http.StatusUnprocessableEntity)
+	}))
+	defer up.Close()
+
+	c := compatOf(t, NewRegistry(), "parallel")
+	c.cfg.baseURL = up.URL
+	c.cfg.validateURL = up.URL + "/search"
+	if got := c.ValidateKey(context.Background(), "test"); got.Status != KeyInconclusive {
+		t.Fatalf("validation = %+v, want inconclusive", got)
 	}
 }

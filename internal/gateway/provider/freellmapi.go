@@ -69,10 +69,15 @@ func freeLLMAPIValidate(ctx context.Context, c *compat, apiKey string) KeyValida
 		return classifyValidation(c.Name(), status, body)
 	}
 	if c.Platform() == "parallel" {
-		if status == http.StatusUnprocessableEntity {
-			return Valid()
+		if status != http.StatusUnprocessableEntity {
+			return Inconclusive("Parallel empty search did not return the expected 422")
 		}
-		return Inconclusive("Parallel empty search did not return the expected 422")
+		contrastHeaders := map[string]string{"x-api-key": sentinelInvalidKey, "Content-Type": "application/json"}
+		contrastStatus, _, _, contrastErr := c.httpCall(ctx, method, endpoint, contrastHeaders, payload, c.cfg.validateTimeout)
+		if contrastErr != nil || (contrastStatus != http.StatusUnauthorized && contrastStatus != http.StatusForbidden) {
+			return Inconclusive("Parallel empty search did not reject an invalid key")
+		}
+		return Valid()
 	}
 	if status < 200 || status >= 300 {
 		return Inconclusive(c.Name() + " credential probe failed")
