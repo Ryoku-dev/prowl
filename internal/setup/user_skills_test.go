@@ -271,6 +271,8 @@ func TestUserSkillPlanPreviewOrderingIsStable(t *testing.T) {
 
 // TestUserSkillPlanFirstInstallChecksums proves a first install produces install
 // actions whose checksums equal the exact bytes that would be written.
+// TestUserSkillPlanFirstInstallChecksums proves a fresh install reports every
+// asset with the expected checksum.
 func TestUserSkillPlanFirstInstallChecksums(t *testing.T) {
 	opts := newUserOpts(t)
 	plan := mustPlan(t, opts)
@@ -287,6 +289,35 @@ func TestUserSkillPlanFirstInstallChecksums(t *testing.T) {
 		}
 		if action.Checksum != asset.Checksum {
 			t.Errorf("%s: checksum %q, want %q", asset.AssetID, action.Checksum, asset.Checksum)
+		}
+	}
+}
+
+// TestUserSkillManifestVersionIsBareSemver pins the agent-plugins schema
+// requirement: a v-prefixed build version must not reach the plugin manifest.
+// The schema validator rejects the whole plugin on a non-semver version
+// string, which takes every skill and command down with it.
+func TestUserSkillManifestVersionIsBareSemver(t *testing.T) {
+	opts := newUserOpts(t)
+	opts.Version = "v9.9.9"
+	mustApply(t, opts)
+	for _, client := range opts.Clients {
+		manifest := filepath.Join(opts.Home, userClientRoot(client), ".claude-plugin", "plugin.json")
+		if client != "claude" {
+			continue
+		}
+		raw, err := os.ReadFile(manifest)
+		if err != nil {
+			t.Fatalf("read %s: %v", manifest, err)
+		}
+		var decoded struct {
+			Version string `json:"version"`
+		}
+		if err := json.Unmarshal(raw, &decoded); err != nil {
+			t.Fatalf("decode %s: %v", manifest, err)
+		}
+		if decoded.Version != "9.9.9" {
+			t.Errorf("manifest version %q, want bare semver \"9.9.9\" (Agent Plugins 1.0 schema rejects a v prefix)", decoded.Version)
 		}
 	}
 }
