@@ -438,7 +438,13 @@ func buildUserCandidates(opts UserInstallOptions) []userCandidate {
 	for _, client := range normalizeUserClients(opts.Clients) {
 		root := userClientRoot(client)
 		for _, asset := range skills.Native(nativeAssetClient(client)) {
-			content := strings.ReplaceAll(asset.Content, userVersionToken, opts.Version)
+			// The Agent Plugins 1.0 schema requires bare semver: a
+			// v-prefixed version invalidates the whole manifest. The
+			// build stamps Version from a v-prefixed git tag, so the
+			// v is dropped here. Status, plan, and update surfaces
+			// keep the v-prefixed form and are unchanged.
+			assetVersion := strings.TrimPrefix(opts.Version, "v")
+			content := strings.ReplaceAll(asset.Content, userVersionToken, assetVersion)
 			out = append(out, userCandidate{
 				client:   client,
 				assetID:  client + ":" + asset.Path,
